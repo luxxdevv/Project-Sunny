@@ -17,8 +17,7 @@ import math
 import re
 import psutil
 
-# Custom orange color
-ORANGE = '\033[38;2;255;165;0m'  # RGB values for orange
+ORANGE = '\033[38;2;255;165;0m'  
 
 class PasswordCracker:
     def __init__(self):
@@ -32,26 +31,39 @@ class PasswordCracker:
         self.batch_size = 10000
         
     async def animate_title(self):
-        titles = [
-            "project sunny",
-            "best unlocker",
-            "easy and simple to use",
-            "https://github.com/luxxdevv/project-sunny",
-            "made by luxx",
-            "fastest brute forcer"
-        ]
-        
-        while not self.stop_threads:
-            for title in titles:
-                for i in range(len(title) + 1):
-                    if self.stop_threads:
-                        return
+        try:
+            titles = [
+                "project sunny",
+                "best unlocker",
+                "easy and simple to use",
+                "https://github.com/luxxdevv",
+                "made by luxx",
+                "fastest brute forcer"
+            ]
+            
+            while not self.stop_threads:
+                for title in titles:
                     try:
-                        win32gui.SetWindowText(win32gui.GetForegroundWindow(), title[:i])
-                        await asyncio.sleep(0.1)
+                        # Full title with typing effect
+                        for i in range(len(title) + 1):
+                            if self.stop_threads:
+                                return
+                            win32gui.SetWindowText(win32gui.GetForegroundWindow(), title[:i])
+                            await asyncio.sleep(0.05)
+                        await asyncio.sleep(1)
+                        
+                        # Backspace effect
+                        for i in range(len(title), -1, -1):
+                            if self.stop_threads:
+                                return
+                            win32gui.SetWindowText(win32gui.GetForegroundWindow(), title[:i])
+                            await asyncio.sleep(0.03)
+                        await asyncio.sleep(0.5)
                     except:
-                        pass
-                await asyncio.sleep(2)
+                        await asyncio.sleep(0.1)
+                        continue
+        except Exception as e:
+            print(f"Title animation error: {e}")
 
     def generate_passwords(self, min_length=1, max_length=8, chars=string.digits):
         if chars == string.digits:
@@ -204,105 +216,150 @@ def print_menu():
     print("4. About")
     print("5. Exit")
 
+def animate_title():
+    titles = [
+        "project sunny",
+        "best unlocker",
+        "easy and simple to use",
+        "https://github.com/luxxdevv",
+        "made by luxx",
+        "fastest brute forcer"
+    ]
+    
+    while True:
+        for title in titles:
+            # Type out the title
+            for i in range(len(title)):
+                try:
+                    win32gui.SetWindowText(win32gui.GetForegroundWindow(), title[:i+1])
+                    time.sleep(0.05)
+                except:
+                    pass
+            time.sleep(1)  # Pause at full title
+
 def main():
     colorama.init()
     cracker = PasswordCracker()
     
-    while True:
-        print_menu()
-        choice = input(f"\n{ORANGE}Project sunny{Fore.WHITE}>{Style.RESET_ALL} ").strip()
-        
-        if choice == '1':
-            file_path = input(f"{Fore.GREEN}Enter file path: {Style.RESET_ALL}")
+    # Start title animation in background thread
+    title_thread = threading.Thread(target=animate_title, daemon=True)
+    title_thread.start()
+    
+    try:
+        while True:
+            print_menu()
+            choice = input(f"\n{ORANGE}Project sunny{Fore.WHITE}>{Style.RESET_ALL} ").strip()
             
-            print(f"\n{Fore.CYAN}Analyzing file...{Style.RESET_ALL}")
-            analysis = cracker.analyze_file(file_path)
-            print(f"\n{Fore.GREEN}{analysis}{Style.RESET_ALL}")
-            
-            if "not password protected" in analysis:
-                input(f"\n{Fore.GREEN}Press Enter to continue...{Style.RESET_ALL}")
-                continue
+            if choice == '1':
+                file_path = input(f"{Fore.GREEN}Enter file path: {Style.RESET_ALL}")
                 
-            min_len = int(input(f"{Fore.YELLOW}Minimum password length (default 1): {Style.RESET_ALL}") or "1")
-            max_len = int(input(f"{Fore.YELLOW}Maximum password length (default 8): {Style.RESET_ALL}") or "8")
-            print(f"\n{Fore.CYAN}Character sets:{Style.RESET_ALL}")
-            print("1. Full (letters, numbers, symbols)")
-            print("2. Simple (letters, numbers)")
-            print("3. Numeric only (0-9)")
-            charset = input(f"{Fore.YELLOW}Choose charset (1-3): {Style.RESET_ALL}")
-            
-            if charset == "3":
-                charset = "numeric"
-            elif charset == "2":
-                charset = "simple"
-            else:
-                charset = "full"
-            
-            cracker.crack_file(file_path, min_len, max_len, charset)
-            input(f"\n{Fore.GREEN}Press Enter to continue...{Style.RESET_ALL}")
-            
-        elif choice == '2':
-            file_path = input(f"{Fore.YELLOW}Enter file path to analyze: {Style.RESET_ALL}")
-            analysis = cracker.analyze_file(file_path)
-            print(f"\n{Fore.GREEN}{analysis}{Style.RESET_ALL}")
-            input(f"\n{Fore.GREEN}Press Enter to continue...{Style.RESET_ALL}")
-            
-        elif choice == '3':
-            while True:
-                print(f"\n{Fore.CYAN}Settings:{Style.RESET_ALL}")
-                print("1. Change thread count")
-                print("2. Change RAM limit")
-                print("3. Show current settings")
-                print("4. Back")
+                print(f"\n{Fore.CYAN}Analyzing file...{Style.RESET_ALL}")
+                analysis = cracker.analyze_file(file_path)
+                print(f"\n{Fore.GREEN}{analysis}{Style.RESET_ALL}")
                 
-                setting = input(f"\n{ORANGE}Settings>{Style.RESET_ALL} ").strip()
-                
-                if setting == '1':
-                    try:
-                        new_threads = int(input(f"{Fore.YELLOW}Enter number of threads (current: {cracker.thread_count}): {Style.RESET_ALL}"))
-                        if new_threads > 0:
-                            cracker.thread_count = new_threads
-                            print(f"{Fore.GREEN}Thread count updated to {new_threads}{Style.RESET_ALL}")
-                        else:
-                            print(f"{Fore.RED}Invalid thread count{Style.RESET_ALL}")
-                    except ValueError:
-                        print(f"{Fore.RED}Invalid input{Style.RESET_ALL}")
-                
-                elif setting == '2':
-                    try:
-                        new_ram = int(input(f"{Fore.YELLOW}Enter RAM limit in MB (current: {cracker.max_ram}): {Style.RESET_ALL}"))
-                        if new_ram > 0:
-                            cracker.max_ram = new_ram
-                            print(f"{Fore.GREEN}RAM limit updated to {new_ram}MB{Style.RESET_ALL}")
-                        else:
-                            print(f"{Fore.RED}Invalid RAM limit{Style.RESET_ALL}")
-                    except ValueError:
-                        print(f"{Fore.RED}Invalid input{Style.RESET_ALL}")
-                
-                elif setting == '3':
-                    print(f"\n{Fore.CYAN}Current Settings:{Style.RESET_ALL}")
-                    print(f"Thread Count: {cracker.thread_count}")
-                    print(f"RAM Limit: {cracker.max_ram}MB")
+                if "not password protected" in analysis:
                     input(f"\n{Fore.GREEN}Press Enter to continue...{Style.RESET_ALL}")
+                    continue
+                    
+                min_len = int(input(f"{Fore.YELLOW}Minimum password length (default 1): {Style.RESET_ALL}") or "1")
+                max_len = int(input(f"{Fore.YELLOW}Maximum password length (default 8): {Style.RESET_ALL}") or "8")
+                print(f"\n{Fore.CYAN}Character sets:{Style.RESET_ALL}")
+                print("1. Full (letters, numbers, symbols)")
+                print("2. Simple (letters, numbers)")
+                print("3. Numeric only (0-9)")
+                charset = input(f"{Fore.YELLOW}Choose charset (1-3): {Style.RESET_ALL}")
                 
-                elif setting == '4':
-                    break
-                
+                if charset == "3":
+                    charset = "numeric"
+                elif charset == "2":
+                    charset = "simple"
                 else:
-                    print(f"{Fore.RED}Invalid option{Style.RESET_ALL}")
-            
-        elif choice == '4':
-            print(f"\n{Fore.CYAN}About Project Sunny:{Style.RESET_ALL}")
-            print("Version: 1.0")
-            print("Author: luxx")
-            print("GitHub: https://github.com/luxxdevv/project-sunny")
-            print("\nA fast and efficient password cracker for ZIP, RAR, and 7Z files.")
-            input(f"\n{Fore.GREEN}Press Enter to continue...{Style.RESET_ALL}")
-            
-        elif choice == '5':
-            print(f"\n{Fore.RED}Exiting...{Style.RESET_ALL}")
-            sys.exit()
+                    charset = "full"
+                
+                cracker.crack_file(file_path, min_len, max_len, charset)
+                input(f"\n{Fore.GREEN}Press Enter to continue...{Style.RESET_ALL}")
+                
+            elif choice == '2':
+                file_path = input(f"{Fore.YELLOW}Enter file path to analyze: {Style.RESET_ALL}")
+                analysis = cracker.analyze_file(file_path)
+                print(f"\n{Fore.GREEN}{analysis}{Style.RESET_ALL}")
+                input(f"\n{Fore.GREEN}Press Enter to continue...{Style.RESET_ALL}")
+                
+            elif choice == '3':
+                while True:
+                    print(f"\n{Fore.CYAN}Settings:{Style.RESET_ALL}")
+                    print("1. Change thread count")
+                    print("2. Change RAM limit")
+                    print("3. Show current settings")
+                    print("4. Back")
+                    
+                    setting = input(f"\n{ORANGE}Settings>{Style.RESET_ALL} ").strip()
+                    
+                    if setting == '1':
+                        try:
+                            new_threads = int(input(f"{Fore.YELLOW}Enter number of threads (current: {cracker.thread_count}): {Style.RESET_ALL}"))
+                            if new_threads > 0:
+                                cracker.thread_count = new_threads
+                                print(f"{Fore.GREEN}Thread count updated to {new_threads}{Style.RESET_ALL}")
+                            else:
+                                print(f"{Fore.RED}Invalid thread count{Style.RESET_ALL}")
+                        except ValueError:
+                            print(f"{Fore.RED}Invalid input{Style.RESET_ALL}")
+                    
+                    elif setting == '2':
+                        try:
+                            new_ram = int(input(f"{Fore.YELLOW}Enter RAM limit in MB (current: {cracker.max_ram}): {Style.RESET_ALL}"))
+                            if new_ram > 0:
+                                cracker.max_ram = new_ram
+                                print(f"{Fore.GREEN}RAM limit updated to {new_ram}MB{Style.RESET_ALL}")
+                            else:
+                                print(f"{Fore.RED}Invalid RAM limit{Style.RESET_ALL}")
+                        except ValueError:
+                            print(f"{Fore.RED}Invalid input{Style.RESET_ALL}")
+                    
+                    elif setting == '3':
+                        print(f"\n{Fore.CYAN}Current Settings:{Style.RESET_ALL}")
+                        print(f"Thread Count: {cracker.thread_count}")
+                        print(f"RAM Limit: {cracker.max_ram}MB")
+                        input(f"\n{Fore.GREEN}Press Enter to continue...{Style.RESET_ALL}")
+                    
+                    elif setting == '4':
+                        break
+                    
+                    else:
+                        print(f"{Fore.RED}Invalid option{Style.RESET_ALL}")
+                
+            elif choice == '4':
+                print(f"\n{Fore.CYAN}About Project Sunny:{Style.RESET_ALL}")
+                print("Version: 1.0")
+                print("Author: luxx")
+                print("GitHub: https://github.com/luxxdevv/project-sunny")
+                print("\nA fast and efficient password cracker for ZIP, RAR, and 7Z files.")
+                input(f"\n{Fore.GREEN}Press Enter to continue...{Style.RESET_ALL}")
+                
+            elif choice == '5':
+                print(f"\n{Fore.RED}Exiting...{Style.RESET_ALL}")
+                cracker.stop_threads = True
+                input("\nPress Enter to exit...")
+                sys.exit()
+                
+    except Exception as e:
+        print(f"\nAn error occurred: {e}")
+        input("\nPress Enter to exit...")
+        sys.exit(1)
 
 if __name__ == "__main__":
-    main()
+    try:
+        # Set console title
+        os.system('title Project Sunny')
+        
+        # Run main program
+        main()
+    except KeyboardInterrupt:
+        print("\nProgram interrupted by user")
+        input("\nPress Enter to exit...")
+    except Exception as e:
+        print(f"\nUnexpected error: {e}")
+        input("\nPress Enter to exit...")
+        sys.exit(1)
 
